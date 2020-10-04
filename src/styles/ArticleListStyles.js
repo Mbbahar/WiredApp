@@ -15,7 +15,7 @@ export default styles = StyleSheet.create({
     backgroundColor: '#4C495E',
   },
   separator: {
-    height: 20,
+    height: 30,
     backgroundColor: '#fff',
   },
   loadingText: {

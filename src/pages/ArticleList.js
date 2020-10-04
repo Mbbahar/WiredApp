@@ -5,11 +5,14 @@ import {
   SafeAreaView,
   Text,
   View,
+  TouchableOpacity,
 } from 'react-native';
 import {ListItem, SearchBar} from 'react-native-elements';
 import CapitalizedText from '../components/CapitalizedText';
 import styles from '../styles/ArticleListStyles';
 import Navbar from '../components/Navbar';
+
+import Localization, {localizationStrings} from '../components/Localization';
 
 export default class ArticleList extends Component {
   constructor(props) {
@@ -17,13 +20,16 @@ export default class ArticleList extends Component {
     this.state = {
       isLoading: true,
       articleList: [],
+      descList: [],
       search: '',
     };
     this.arrayholder = [];
   }
- 
+
   componentDidMount() {
-    return fetch('https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.wired.com%2Ffeed%2Fcategory%2Fbusiness%2Flatest%2Frss&api_key=64tr8loimqyl4sp4d8mucntcpuil5zxgynusbgf3&order_dir=desc&count=5')
+    return fetch(
+      'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.wired.com%2Ffeed%2Fcategory%2Fbusiness%2Flatest%2Frss&api_key=64tr8loimqyl4sp4d8mucntcpuil5zxgynusbgf3&order_dir=desc&count=5',
+    )
       .then((response) => response.json())
       .then((response) => {
         this.setState({
@@ -31,9 +37,41 @@ export default class ArticleList extends Component {
           articleList: response.items,
         });
         this.arrayholder = response.items;
+
+        //console.log(localizationStrings.start_for_free)
       })
       .catch((err) => console.log(err));
-    
+  }
+
+  // translatefunc = () => {
+  //   const translate = require('google-translate-api');
+
+  //   translate('Ik spreek Engels', {to: 'en'})
+  //     .then((res) => {
+  //       console.log(res.text);
+  //       //=> I speak English
+  //       console.log(res.from.language.iso);
+  //       //=> nl
+  //     })
+  //     .catch((err) => {
+  //       console.error(err);
+  //     });
+  // }
+
+  findMostReaptedWord(str) {
+    var counts = {},
+      mr,
+      mc;
+    str.match(/\w+/g).forEach(function (w) {
+      counts[w] = (counts[w] || 0) + 1;
+    });
+    for (var w in counts) {
+      if (!(counts[w] < mc)) {
+        mc = counts[w];
+        mr = w;
+      }
+    }
+    return mr;
   }
 
   _SearchFilterFunction = (text) => {
@@ -60,7 +98,6 @@ export default class ArticleList extends Component {
         </View>
       );
     } else {
-    
       return (
         <SafeAreaView style={{flex: 1}}>
           <Navbar title="WiredApp" />
@@ -74,7 +111,6 @@ export default class ArticleList extends Component {
               onChangeText={(text) => this._SearchFilterFunction(text)}
             />
           </View>
-
           <View style={styles.container}>
             <FlatList
               data={this.state.articleList}
@@ -84,28 +120,29 @@ export default class ArticleList extends Component {
                   chevron
                   title={
                     <View style={{flexDirection: 'row'}}>
-                      <Text style={styles.articleTitle}>
-                        {item.title}
-                      </Text>
+                      <Text style={styles.articleTitle}>{item.title}</Text>
                     </View>
                   }
                   leftAvatar={{
                     rounded: false,
                     size: 'large',
                     source: {
-                      uri:item.thumbnail
+                      uri: item.thumbnail,
                     },
                   }}
-                  
                   containerStyle={{
-                    backgroundColor:
-                      '#E0E0E0'
+                    backgroundColor: '#E0E0E0',
                   }}
                   avatarStyle={{backgroundColor: '#fff'}}
                   subtitle={
                     <CapitalizedText style={styles.articleDescription}>
-                      {item.description}
-                    </CapitalizedText>                    
+                      {item.description +
+                        '\n ' +
+                        '\n' +
+                        'Keywords: ' +
+                        this.findMostReaptedWord(item.description)
+                      }
+                    </CapitalizedText>
                   }
                   onPress={() => {
                     this.props.navigation.navigate('ArticleDetails', {
